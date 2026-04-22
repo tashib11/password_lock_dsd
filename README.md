@@ -71,6 +71,38 @@ The design is partitioned into small functional modules:
 6. If the password is incorrect, the failed-attempt counter increments.
 7. After three failed attempts, the system enters `LOCKED_OUT` and starts a timed penalty period.
 
+### Authentication Flowchart
+
+```mermaid
+flowchart TD
+    A[Power On or Reset] --> B[IDLE State]
+    B --> C{Load asserted?}
+    C -- Yes --> D[Store switch_input as password for selected user_id]
+    D --> B
+    C -- No --> E{Enter asserted?}
+    E -- No --> B
+    E -- Yes --> F[Read stored password from memory]
+    F --> G[ALU compare: entered password vs stored password]
+    G --> H{Match?}
+    H -- Yes --> I[OPEN State]
+    I --> J[unlock_led ON]
+    J --> K[Display authenticated user_id]
+    K --> L[Remain unlocked until reset]
+    H -- No --> M[Increment failed attempt count]
+    M --> N{Failed attempts >= 3?}
+    N -- No --> O[LOCK State]
+    O --> P[Show remaining attempts]
+    P --> Q[Wait for enter release]
+    Q --> B
+    N -- Yes --> R[LOCKED_OUT State]
+    R --> S[lockout_led ON]
+    S --> T[Start lockout timer]
+    T --> U{Timer expired?}
+    U -- No --> R
+    U -- Yes --> V[Clear failed attempts]
+    V --> W[Return to IDLE]
+```
+
 ## State Behavior
 
 The control unit uses the following states:
